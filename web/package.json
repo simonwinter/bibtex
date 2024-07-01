@@ -1,0 +1,26 @@
+{
+  "name": "dragonfly-data-science-website",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "bib": "tsc -p ./tsconfig.scripts.json && node ./scripts/bibliography/index.js",
+    "clean": "npx rimraf ./src/content/bibliography/*.json; npx rimraf ./scripts/bibliography/*.js"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.5.8",
+    "astro": "^4.11.1",
+    "typescript": "5.4.5"
+  },
+  "devDependencies": {
+    "@orcid/bibtex-parse-js": "0.0.25",
+    "@total-typescript/tsconfig": "1.0.4",
+    "@types/node": "20.14.8",
+    "biblatex-csl-converter": "2.1.0",
+    "zod": "3.23.8"
+  }
+}
