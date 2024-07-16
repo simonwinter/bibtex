@@ -1,0 +1,14 @@
+{
+  "extends": "@total-typescript/tsconfig/tsc/no-dom/library-monorepo",
+  "compilerOptions": {
+    "paths": {
+      "@df-astro/bibliography/*": ["./src/*"]
+    },
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
+}
