@@ -1,8 +1,5 @@
 import chalk, { type ForegroundColorName } from 'chalk'
 
-// const logSymbols = require('log-symbols')
-// const chalk = require('chalk')
-// import cliSpinners from 'cli-spinners'
 import ora, { type Ora } from 'ora'
 import log from 'loglevel'
 
