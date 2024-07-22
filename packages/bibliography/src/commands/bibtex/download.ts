@@ -7,6 +7,7 @@ import colors from 'ansi-colors'
 
 import https from 'https'
 import { Logger } from '@df-astro/bibliography/log'
+import ora, { oraPromise } from 'ora'
 
 const BIB_FILE = 'https://raw.githubusercontent.com/dragonfly-science/bibliography/master/dragonfly.bib'
 
@@ -48,7 +49,6 @@ export default class Download extends Command {
     
     this.logger = new Logger(flags.verbosity, {
       label: `‣ ${this.id}: `,
-      color: 'magentaBright'
     })
 
     const download = await this.download(flags.url, flags.verbosity)
@@ -82,6 +82,8 @@ export default class Download extends Command {
             'Expires': '0'
           }
         }
+
+        this.logger?.processing('Downloading bib file...')
 
         https.get(url, options, (result) => {
           if (result.statusCode !== 200) {
@@ -120,15 +122,22 @@ export default class Download extends Command {
     }
   }
 
-  private parseBib(response: string) {
+  private async parseBib(response: string) {
+    this.logger?.processing('parsing bib file')
     const parser = new BibLatexParser(response, {
       processUnexpected: true, 
-      processUnknown: true
+      processUnknown: true,
+      processComments: false,
+      processInvalidURIs: false
     })
 
     try {
-      const parsed = parser.parse()
+      
+      const parsed = await (async () => {
+        return parser.parseAsync()
+      })()
       this.logger?.success('bib file successfully parsed')
+      
       return parsed
     } catch (e) {
       this.logger?.error(`Error parsing Bib: ${(e as Error).message}`)
@@ -139,8 +148,10 @@ export default class Download extends Command {
 
   private async save(parsed: ReturnType<BibLatexParser['parse']>, output: string) {
     try {
-      await this.io?.saveToDisk(parsed, output)
-      this.logger?.success(`bib file successfully saved as ${output}`)
+      this.logger?.processing('saving bib file')
+      const size = await this.io?.saveToDisk(parsed, output)
+      const fileSize = size ? `\t${(size / 1024 / 1024).toFixed(2)} MB` : ''
+      this.logger?.success(`bib file successfully saved as ${output}${fileSize}`)
     } catch (e) {
       this.logger?.error((e as Error).message)
       process.exit(1)

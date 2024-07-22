@@ -1,45 +1,78 @@
-import logSymbols from 'log-symbols'
 import chalk, { type ForegroundColorName } from 'chalk'
 
 // const logSymbols = require('log-symbols')
 // const chalk = require('chalk')
+// import cliSpinners from 'cli-spinners'
+import ora, { type Ora } from 'ora'
 import log from 'loglevel'
 
 export namespace Logger {
   export type Levels = Exclude<log.LogLevelNames, 'debug' | 'trace'> | 'silent'
   export type Prefix = {
     label: string
-    color: ForegroundColorName
+    color?: ForegroundColorName
   }
-  export type Input = unknown
+  export type Input = string
 }
 
 export class Logger {
-
-  private prefix: Logger.Prefix
+  private ora: Ora
   
   constructor(logLevel: Logger.Levels, prefix: Logger.Prefix = { label: '', color: 'yellow' }) {
     log.setLevel(logLevel, true)
-    this.prefix = prefix
+
+    const colourNames: ForegroundColorName[] = ['yellow', 'green', 'blue', 'magentaBright', 'cyanBright']
+
+    this.ora = ora({
+      prefixText: chalk[prefix.color ?? colourNames[Math.floor(Math.random() * colourNames.length)] ?? 'cyan'](prefix.label)
+    })
   }
 
-  info(...input: Logger.Input[]) {
-    log.info(...input)
+  info(input: Logger.Input) {
+    if (log.getLevel() > log.levels.INFO) {
+      return
+    }
+
+    log.info(input)
   }
 
-  success(...input: Logger.Input[]) {
-    log.info(chalk[this.prefix.color](this.prefix.label), logSymbols.success, chalk.green(input))
+  success(input: Logger.Input) {
+    if (log.getLevel() > log.levels.INFO) {
+      return
+    }
+
+    this.ora.succeed(input).stop()
   }
 
-  warn(...input: Logger.Input[]) {
-    log.warn(logSymbols.warning, chalk.yellow(input))
+  warn(input: Logger.Input) {
+    if (log.getLevel() > log.levels.WARN) {
+      return
+    }
+
+    this.ora.warn(chalk.yellow(input)).stop()
   }
 
-  error(...input: Logger.Input[]) {
-    log.error(logSymbols.error, chalk.red(input))
+  error(input: Logger.Input) {
+    if (log.getLevel() > log.levels.ERROR) {
+      return
+    }
+
+    this.ora.fail(chalk.red(input)).stop()
   }
 
-  log(...input: Logger.Input[]) {
-    return [this.prefix, ...input]
+  processing(input: Logger.Input) {
+    if (log.getLevel() > log.levels.INFO) {
+      return
+    }
+
+    this.ora.start(input)
+  }
+  
+  done() {
+    this.ora.stop()
+  }
+
+  clear() {
+    this.ora.clear()
   }
 }

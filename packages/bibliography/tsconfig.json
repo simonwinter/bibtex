@@ -7,6 +7,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "module": "ES2022",
+    "resolveJsonModule": true,
     "moduleResolution": "Bundler",
   },
   "include": ["src/**/*.ts"],

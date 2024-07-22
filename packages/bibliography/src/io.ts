@@ -1,6 +1,7 @@
 // import { get as https } from 'https'
 import { dirname, resolve } from 'path'
 import { writeFile, mkdir } from 'fs/promises'
+import { statSync } from 'fs'
 // import type { Logger } from '@df-astro/bibliography/log'
 
 
@@ -45,5 +46,8 @@ export class BibliographyIO {
       await mkdir(dirPath, { recursive: true })
 
       await writeFile(absolutePath, jsonString)
+
+      const { size } = statSync(absolutePath)
+      return size
   }
 }

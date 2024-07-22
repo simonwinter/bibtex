@@ -56,7 +56,7 @@ export class BibFile {
         })
       })
     } catch (e) {
-      this.logger.error('Error downloading bib file ', (e as Error).message)
+      this.logger.error(`Error downloading bib file: ${(e as Error).message}`)
       process.exit(1)
     }
 
