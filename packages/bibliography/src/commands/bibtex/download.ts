@@ -1,13 +1,8 @@
 import { BibliographyIO } from '@df-astro/bibliography/io'
 import { Command, Flags } from '@oclif/core'
 import { BibLatexParser } from 'biblatex-csl-converter'
-
-import cliProgress from 'cli-progress'
-import colors from 'ansi-colors'
-
 import https from 'https'
 import { Logger } from '@df-astro/bibliography/log'
-import ora, { oraPromise } from 'ora'
 
 const BIB_FILE = 'https://raw.githubusercontent.com/dragonfly-science/bibliography/master/dragonfly.bib'
 
@@ -36,6 +31,11 @@ export default class Download extends Command {
       char: 'v',
       description: 'set logging level',
       default: 'info'
+    }),
+    noColour: Flags.boolean({
+      description: 'disable colour output',
+      aliases: ['no-colour', 'no-color'],
+      default: false
     })
   }
 
@@ -49,7 +49,7 @@ export default class Download extends Command {
     
     this.logger = new Logger(flags.verbosity, {
       label: `‣ ${this.id}: `,
-    })
+    }, flags.noColour)
 
     const download = await this.download(flags.url)
     const parsed = await this.parseBib(download)

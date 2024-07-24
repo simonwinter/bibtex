@@ -8,7 +8,7 @@
     "start": "node ./dist/index.js",
     "bib": "npm run build && npm run start",
     "clean": "npm run rimraf ./src/content/bibliography/*.json; npm run rimraf ./dist",
-    "bib:download": "./bin/dev.js bibtex download -o ./test.json"
+    "bib:download": "./bin/dev.js bibtex download -o ./test.json --no-colour"
   },
   "exports": {
     "./io": {

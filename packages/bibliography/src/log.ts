@@ -1,4 +1,4 @@
-import chalk, { type ForegroundColorName } from 'chalk'
+import { type ChalkInstance, type ForegroundColorName, Chalk } from 'chalk'
 import cliProgress from 'cli-progress'
 import log from 'loglevel'
 import logSymbols from 'log-symbols'
@@ -19,17 +19,19 @@ export namespace Logger {
 export class Logger {
   private ora: Ora
   private prefix: Required<Logger.Prefix> & { chalkOutput?: string }
+  private chalk: ChalkInstance
   
-  constructor(logLevel: Logger.Levels, prefix: Logger.Prefix = { label: '', color: 'yellow' }) {
+  constructor(logLevel: Logger.Levels, prefix: Logger.Prefix = { label: '', color: 'yellow' }, nolColour = false) {
     log.setLevel(logLevel, true)
 
     const colourNames: ForegroundColorName[] = ['yellow', 'green', 'blue', 'magentaBright', 'cyanBright']
     const randomColour = colourNames[Math.floor(Math.random() * colourNames.length)] as ForegroundColorName
 
+    this.chalk = new Chalk({ level: nolColour ? 0 : undefined })
     this.prefix = {
       ...prefix,
       color: randomColour,
-      chalkOutput: chalk[prefix.color ?? randomColour](prefix.label)
+      chalkOutput: this.chalk[prefix.color ?? randomColour](prefix.label)
     }
 
     this.ora = ora({
@@ -58,7 +60,7 @@ export class Logger {
       return
     }
 
-    this.ora.warn(chalk.yellow(input)).stop()
+    this.ora.warn(this.chalk.yellow(input)).stop()
   }
 
   error(input: Logger.Input) {
@@ -66,7 +68,7 @@ export class Logger {
       return
     }
 
-    this.ora.fail(chalk.red(input)).stop()
+    this.ora.fail(this.chalk.red(input)).stop()
   }
 
   processing(input: Logger.Input) {
@@ -86,19 +88,19 @@ export class Logger {
   }
 
   progress(args: Logger.ProgressOptions) {
-    const { prefix, barCompleteString, ...params } = args
-    // success: string, prefix?: string
     if (log.getLevel() > log.levels.INFO) {
       return
     }
+
+    const { prefix, barCompleteString, ...params } = args
 
     return new cliProgress.SingleBar({
       ...params,
       format: (options, params, payload) => {
         const barValue = options.barCompleteString?.substring(0, Math.round(params.progress*(options.barsize ?? 1)))
-        const barPrefix = chalk[this.prefix.color](prefix ?? this.prefix.label)
+        const barPrefix = this.chalk[this.prefix.color](prefix ?? this.prefix.label)
         const percentage = Math.ceil(params.progress*100)
-        const bar = chalk[percentage < 100 ? 'cyan' : 'green'](barValue)
+        const bar = this.chalk[percentage < 100 ? 'cyan' : 'green'](barValue)
         const barSeparator = percentage < 100 ? '  ' : logSymbols.success
         const eta = percentage < 100 ? `ETA ${params.eta}` : barCompleteString
 
