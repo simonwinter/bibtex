@@ -40,10 +40,10 @@
   "devDependencies": {
     "@oclif/core": "^4.0.12",
     "@total-typescript/tsconfig": "1.0.4",
-    "@types/cli-progress": "3.11.6",
     "ansi-colors": "4.1.3",
     "chalk": "5.3.0",
     "cli-progress": "3.12.0",
+    "log-symbols": "6.0.0",
     "loglevel": "1.9.1",
     "oclif": "4.14.5",
     "ora": "8.0.1",
@@ -57,6 +57,9 @@
     "bin": "bibliography",
     "commands": "./dist/commands",
     "dirname": "bibliography",
-    "topicSeparator": " "
+    "topicSeparator": " ",
+    "nodeOptions": [
+      "--experimental-json-modules"
+    ]
   }
 }

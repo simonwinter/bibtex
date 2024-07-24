@@ -51,7 +51,7 @@ export default class Download extends Command {
       label: `‣ ${this.id}: `,
     })
 
-    const download = await this.download(flags.url, flags.verbosity)
+    const download = await this.download(flags.url)
     const parsed = await this.parseBib(download)
 
     this.io = new BibliographyIO()
@@ -60,17 +60,11 @@ export default class Download extends Command {
     this.logger.info(`Completed in ${(end - start)}ms`)
   }
 
-  private async download(url: string, logLevel: Logger.Levels) {
+  private async download(url: string) {
     try {
-      const progress = logLevel === 'info' ? new cliProgress.SingleBar({
-        format: 'Downloading Bib file |' + colors.cyan('{bar}') + '| {percentage}% | ETA {eta}',
-        barCompleteChar: '\u2588',
-        barIncompleteChar: '\u2591',
-        hideCursor: true,
-        clearOnComplete: true,
-        stopOnComplete: true,
-        gracefulExit: true
-      }) : undefined
+      const progress = this.logger?.progress({
+        barCompleteString: 'bib file successfully downloaded'
+      })
 
       return await new Promise<string>((resolve, reject) => {
     
@@ -82,8 +76,6 @@ export default class Download extends Command {
             'Expires': '0'
           }
         }
-
-        this.logger?.processing('Downloading bib file...')
 
         https.get(url, options, (result) => {
           if (result.statusCode !== 200) {
@@ -103,16 +95,15 @@ export default class Download extends Command {
             progress?.update(downloadedSize)
             data += chunk
           })
-
+          
           // The whole response has been received. Resolve the promise.
           result.on('end', () => {
-            // progress.stop()
-            this.logger?.success('bib file successfully downloaded')
+            progress?.stop()
             resolve(data)
           })
 
         }).on('error', (error) => {
-          // progress.stop()
+          progress?.stop()
           reject(error)
         })
       })
