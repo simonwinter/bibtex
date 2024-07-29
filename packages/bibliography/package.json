@@ -28,6 +28,9 @@
     },
     "./utils": {
       "import": "./dist/utils.js"
+    },
+    "./parseBib": {
+      "import": "./dist/parseBib.js"
     }
   },
   "dependencies": {

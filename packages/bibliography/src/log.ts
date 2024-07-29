@@ -5,7 +5,14 @@ import logSymbols from 'log-symbols'
 import ora, { type Ora, spinners } from 'ora'
 
 export namespace Logger {
-  export type Levels = Exclude<log.LogLevelNames, 'debug' | 'trace'> | 'silent'
+  export type Levels = log.LogLevelNames | 'silent'
+
+  export type Options = {
+    logLevel: Logger.Levels
+    prefix: Logger.Prefix 
+    nolColour?: boolean
+  }
+
   export type Prefix = {
     label: string
     color?: ForegroundColorName
@@ -21,7 +28,7 @@ export class Logger {
   private prefix: Required<Logger.Prefix> & { chalkOutput?: string }
   private chalk: ChalkInstance
   
-  constructor(logLevel: Logger.Levels, prefix: Logger.Prefix = { label: '', color: 'yellow' }, nolColour = false) {
+  constructor({ logLevel, prefix, nolColour = false }: Logger.Options) {
     log.setLevel(logLevel, true)
 
     const colourNames: ForegroundColorName[] = ['yellow', 'green', 'blue', 'magentaBright', 'cyanBright']
@@ -53,6 +60,22 @@ export class Logger {
     }
 
     this.ora.succeed(input).stop()
+  }
+
+  debug(input: Logger.Input) {
+    if (log.getLevel() > log.levels.DEBUG) {
+      return
+    }
+
+    log.debug(input)
+  }
+
+  trace(input: Logger.Input) {
+    if (log.getLevel() > log.levels.TRACE) {
+      return
+    }
+
+    log.trace(input)
   }
 
   warn(input: Logger.Input) {

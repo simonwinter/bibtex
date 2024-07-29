@@ -4,7 +4,11 @@ import { BibLatexParser } from 'biblatex-csl-converter'
 import https from 'https'
 import { Logger } from '@df-astro/bibliography/log'
 
+import { Worker } from 'worker_threads'
+
 const BIB_FILE = 'https://raw.githubusercontent.com/dragonfly-science/bibliography/master/dragonfly.bib'
+
+type ParsedBibTex = ReturnType<BibLatexParser['parse']>
 
 export default class Download extends Command {
   static override description = 'Download the bibtex file necessary to build our bibliography'
@@ -22,7 +26,7 @@ export default class Download extends Command {
     }),
     output: Flags.file({ 
       char: 'o',
-      required: true,
+      required: false,
       description: 'Output path to download the file to'
     }),
     verbosity: Flags.option({
@@ -39,23 +43,46 @@ export default class Download extends Command {
     })
   }
 
+  public static override enableJsonFlag = true
+
   response?: string
   io?: BibliographyIO
   logger?: Logger
 
-  public async run(): Promise<void> {
+  public async run() {
     const start = performance.now()
     const { flags } = await this.parse(Download)
     
-    this.logger = new Logger(flags.verbosity, {
-      label: `‣ ${this.id}: `,
-    }, flags.noColour)
+    this.logger = new Logger({
+      logLevel: flags.json ? 'silent' : flags.verbosity,
+      prefix: {
+        label: `‣ ${this.id}: `,
+      }, 
+      nolColour: flags.noColour
+    })
 
     const download = await this.download(flags.url)
-    const parsed = await this.parseBib(download)
+    let parsed: ParsedBibTex | undefined = undefined
 
-    this.io = new BibliographyIO()
-    await this.save(parsed, flags.output)
+    try {
+      const response = await this.parseBib(download)
+      parsed = response
+
+      if (flags.json) {
+        return JSON.parse(JSON.stringify(response))
+      }
+  
+    } catch(e) {
+      this.logger.error((e as Error).message)
+      process.exit(1)
+    }
+
+
+    if (flags.output) {
+      this.io = new BibliographyIO()
+      await this.save(parsed, flags.output)
+    }
+
     const end = performance.now()
     this.logger.info(`Completed in ${(end - start)}ms`)
   }
@@ -113,27 +140,44 @@ export default class Download extends Command {
     }
   }
 
-  private async parseBib(response: string) {
+  private async parseBib(response: string): Promise<ReturnType<BibLatexParser['parse']>> {
     this.logger?.processing('parsing bib file')
-    const parser = new BibLatexParser(response, {
-      processUnexpected: true, 
-      processUnknown: true,
-      processComments: false,
-      processInvalidURIs: false
-    })
 
-    try {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker('./dist/parseBib.js', { workerData: response })
+
+      worker.on('message', (data: { success: boolean; result: ReturnType<BibLatexParser['parse']> }) => {
+        this.logger?.success('bib file successfully parsed')
+        resolve(data.result)
+      })
+      worker.on('error', reject)
+      worker.on('exit', (code) => {
+        if (code !== 0)
+          reject(new Error(`Worker stopped with exit code ${code}`))
+      })
+    })
+    // const parser = new BibLatexParser(response, {
+    //   processUnexpected: true, 
+    //   processUnknown: true,
+    //   processComments: false,
+    //   processInvalidURIs: false
+    // })
+
+    // try {
       
-      const parsed = await (async () => {
-        return parser.parseAsync()
-      })()
-      this.logger?.success('bib file successfully parsed')
+    //   // const parsed = await (async () => {
+    //   //   return parser.parseAsync()
+    //   // })()
+
       
-      return parsed
-    } catch (e) {
-      this.logger?.error(`Error parsing Bib: ${(e as Error).message}`)
-      process.exit(1)
-    }
+    //   return parser.parseAsync().then((bib) => {
+    //     this.logger?.success('bib file successfully parsed')
+    //     return bib
+    //   })
+    // } catch (e) {
+    //   this.logger?.error(`Error parsing Bib: ${(e as Error).message}`)
+    //   process.exit(1)
+    // }
   }
 
 

@@ -20,7 +20,12 @@ const DOI_API_HEADERS = {
 
 const RATE_LIMIT = 5 as const
 
-const logger = new Logger('info')
+const logger = new Logger({
+  logLevel: 'info',
+  prefix: {
+    label: 'logger >'
+  }
+})
 // const localIO = new BibliographyIO(logger)
 const doiAPI = new DoiAPI(logger, DOI_API_HEADERS)
 
