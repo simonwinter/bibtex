@@ -1,3 +1,4 @@
+import { BibliographyIO } from '@df-astro/bibliography/io'
 import { Logger } from '@df-astro/bibliography/log'
 import { Command, Flags, Interfaces } from '@oclif/core'
 
@@ -18,19 +19,27 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     })({
       char: 'v',
       description: 'set logging level',
-      default: 'info'
+      default: 'silent'
     }),
-    noColour: Flags.boolean({
+    'no-color': Flags.boolean({
       description: 'disable colour output',
-      aliases: ['no-colour', 'no-color'],
       default: false
     }),
+    output: Flags.string({
+      char: 'o',
+      description: 'If saving file to disk, file path to save to',
+      exactlyOne: ['stdout', 'output']
+    }),
+    stdout: Flags.boolean({
+      description: 'Indicate if you want output to be redirected to stdout',
+    })
   }
 
   protected flags!: Flags<T>
   protected args!: Args<T>
 
   protected logger!: Logger
+  protected io?: BibliographyIO
 
   public override async init(): Promise<void> {
     await super.init()
@@ -46,9 +55,10 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       logLevel: flags.json ? 'silent' : flags.verbosity,
       prefix: {
         label: `‣ ${this.id}: `,
-      }, 
-      nolColour: flags.noColour
+      }
     })
+
+    this.io = new BibliographyIO()
 
     this.flags = flags as Flags<T>
     this.args = args as Args<T>
@@ -63,5 +73,17 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   protected override async finally(_: Error | undefined): Promise<any> {
     // called after run and catch regardless of whether or not the command errored
     return super.finally(_)
+  }
+
+  protected async save(input: string, path: string) {
+    try {
+      this.logger?.processing('saving file')
+      const size = await this.io?.saveToDisk({ input, path })
+      const fileSize = size ? `\t${(size / 1024 / 1024).toFixed(2)} MB` : ''
+      this.logger?.success(`file successfully saved as ${path}${fileSize}`)
+    } catch (e) {
+      this.logger?.error((e as Error).message)
+      process.exit(1)
+    }
   }
 }

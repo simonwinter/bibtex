@@ -19,17 +19,30 @@ export default class Parse extends BaseCommand<typeof Parse> {
   ]
 
   static override flags = {
-    verbosity: Flags.option({
-      options: verbosityFlags
-    })({
-      char: 'v',
-      description: 'set logging level',
-      default: 'silent'
-    }),
     stdin: Flags.boolean({
       description: 'read input from stdin',
       default: true
     }),
+    output: Flags.string({
+      char: 'o',
+      description: 'If saving file to disk, file path to save to',
+      exactlyOne: ['stdout', 'output'],
+      relationships: [
+        {
+          type: 'all',
+          flags: ['json']
+        }
+      ]
+    }),
+    stdout: Flags.boolean({
+      description: 'Indicate if you want output to be redirected to stdout',
+      relationships: [
+        {
+          type: 'all',
+          flags: ['json']
+        }
+      ]
+    })
   }
 
   public static override enableJsonFlag = true
@@ -49,24 +62,31 @@ export default class Parse extends BaseCommand<typeof Parse> {
       })
     }
 
-    if (rl) {
-      try {
-        let parsed = ''
-        for await (const line of rl) {
-          parsed += line
-        }
-
-        const output = await this.parseBib(parsed)
-
-        if (flags.json) {
-          return JSON.parse(JSON.stringify(output))
-        }
-      } catch(e) {
-        this.logger.error((e as Error).message)
-        process.exit(1)
-      }
+    if (!rl) {
+      return
     }
 
+    try {
+      let parsed = ''
+
+      for await (const line of rl) {
+        parsed += line
+      }
+
+      const output = await this.parseBib(parsed)
+      const jsonOut = JSON.stringify(output)
+
+      if (flags.stdout) {
+        return JSON.parse(jsonOut)
+      }
+
+      if (flags.output) {
+        await this.save(jsonOut, flags.output)
+      }
+    } catch(e) {
+      this.logger.error((e as Error).message)
+      process.exit(1)
+    }
   }
 
   private async parseBib(response: string): Promise<ParsedBibTex> {

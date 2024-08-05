@@ -66,6 +66,9 @@
     "topicSeparator": " ",
     "nodeOptions": [
       "--experimental-json-modules"
-    ]
+    ],
+    "macos": {
+      "identifier": "com.dragonfly.bibliography.cli"
+    }
   }
 }

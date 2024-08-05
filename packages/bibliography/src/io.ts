@@ -4,6 +4,12 @@ import { writeFile, mkdir } from 'fs/promises'
 import { statSync } from 'fs'
 // import type { Logger } from '@df-astro/bibliography/log'
 
+type SaveArgs = {
+  input: string
+  path: string
+}
+
+
 
 export class BibliographyIO {
 
@@ -38,14 +44,13 @@ export class BibliographyIO {
   //   })
   // }
 
-  async saveToDisk<T>(input: T, path: string) {
+  async saveToDisk({ input, path }: SaveArgs) {
       const absolutePath = resolve(path)
       const dirPath = dirname(absolutePath)
-      const jsonString = JSON.stringify(input)
 
       await mkdir(dirPath, { recursive: true })
 
-      await writeFile(absolutePath, jsonString)
+      await writeFile(absolutePath, input, 'utf8')
 
       const { size } = statSync(absolutePath)
       return size

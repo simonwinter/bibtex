@@ -77,13 +77,13 @@ export class BibFile {
     return this
   }
 
-  async save() {
-    if (this.parsed) {
-      await this.io.saveToDisk(this.parsed, this.output)
-    } else {
-      throw new Error('No parsed data to save. Call parse() first.')
-    }
+  // async save() {
+  //   if (this.parsed) {
+  //     await this.io.saveToDisk(this.parsed, this.output)
+  //   } else {
+  //     throw new Error('No parsed data to save. Call parse() first.')
+  //   }
 
-    return this
-  }
+  //   return this
+  // }
 }

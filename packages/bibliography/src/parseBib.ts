@@ -9,7 +9,7 @@ try {
       processComments: false,
       processInvalidURIs: false
     })
-  const result = parser.parse()
+  const result = await parser.parseAsync()
   parentPort?.postMessage({ success: true, result });
 } catch (error) {
   parentPort?.postMessage({ success: false, error: (error as Error).message });
