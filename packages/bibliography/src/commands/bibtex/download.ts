@@ -1,20 +1,28 @@
 import { BibliographyIO } from '@df-astro/bibliography/io'
-import { Command, Flags } from '@oclif/core'
+import { Flags } from '@oclif/core'
 import { BibLatexParser } from 'biblatex-csl-converter'
 import https from 'https'
-import { Logger } from '@df-astro/bibliography/log'
 
-import { Worker } from 'worker_threads'
+import { BaseCommand, verbosityFlags } from '@df-astro/bibliography/baseCommand'
 
 const BIB_FILE = 'https://raw.githubusercontent.com/dragonfly-science/bibliography/master/dragonfly.bib'
 
 type ParsedBibTex = ReturnType<BibLatexParser['parse']>
 
-export default class Download extends Command {
-  static override description = 'Download the bibtex file necessary to build our bibliography'
+export default class Download extends BaseCommand<typeof Download> {
+
+  static override summary = 'Download the bibtex file necessary to build our bibliography'
+
+  static override description = `
+    Download the bibtex file necessary to build our bibliography.
+    If the --json flag is supplied, the output is sent to stdout and no logging occurs.
+    If --json and --output are supplied, the file is saved to output and loggign is enabled.`
 
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
+    '<%= config.bin %> <%= command.id %> --json',
+    '<%= config.bin %> <%= command.id %> -o <file-path> --json',
+    '<%= config.bin %> <%= command.id %> -v warn',
   ]
 
   static override flags = {
@@ -22,66 +30,50 @@ export default class Download extends Command {
       char: 'u', 
       required: false,
       description: 'Url of bibtex file to download.',
+      aliases: ['output'],
       default: BIB_FILE
     }),
-    output: Flags.file({ 
-      char: 'o',
-      required: false,
-      description: 'Output path to download the file to'
-    }),
     verbosity: Flags.option({
-      options: ['info', 'warn', 'error', 'silent'] as const
+      options: verbosityFlags
     })({
       char: 'v',
       description: 'set logging level',
-      default: 'info'
+      default: 'silent'
     }),
-    noColour: Flags.boolean({
-      description: 'disable colour output',
-      aliases: ['no-colour', 'no-color'],
-      default: false
-    })
   }
 
-  public static override enableJsonFlag = true
+  static override enableJsonFlag = false
 
   response?: string
   io?: BibliographyIO
-  logger?: Logger
 
   public async run() {
     const start = performance.now()
     const { flags } = await this.parse(Download)
-    
-    this.logger = new Logger({
-      logLevel: flags.json ? 'silent' : flags.verbosity,
-      prefix: {
-        label: `‣ ${this.id}: `,
-      }, 
-      nolColour: flags.noColour
-    })
+
+    this.logger.setLogLevel(flags.verbosity)
 
     const download = await this.download(flags.url)
-    let parsed: ParsedBibTex | undefined = undefined
 
-    try {
-      const response = await this.parseBib(download)
-      parsed = response
+    process.stdout.write(download)
 
-      if (flags.json) {
-        return JSON.parse(JSON.stringify(response))
-      }
+    // try {
+    //   const response = await this.parseBib(download)
+    //   parsed = response
+
+    //   if (flags.json && !flags.output) {
+    //     return JSON.parse(JSON.stringify(response))
+    //   }
   
-    } catch(e) {
-      this.logger.error((e as Error).message)
-      process.exit(1)
-    }
+    // } catch(e) {
+    //   this.logger.error((e as Error).message)
+    //   process.exit(1)
+    // }
 
-
-    if (flags.output) {
-      this.io = new BibliographyIO()
-      await this.save(parsed, flags.output)
-    }
+    // if (flags.output) {
+    //   this.io = new BibliographyIO()
+    //   await this.save(parsed, flags.output)
+    // }
 
     const end = performance.now()
     this.logger.info(`Completed in ${(end - start)}ms`)
@@ -138,46 +130,6 @@ export default class Download extends Command {
       this.logger?.error(`Error downloading bib file ${(e as Error).message}`)
       process.exit(1)
     }
-  }
-
-  private async parseBib(response: string): Promise<ReturnType<BibLatexParser['parse']>> {
-    this.logger?.processing('parsing bib file')
-
-    return new Promise((resolve, reject) => {
-      const worker = new Worker('./dist/parseBib.js', { workerData: response })
-
-      worker.on('message', (data: { success: boolean; result: ReturnType<BibLatexParser['parse']> }) => {
-        this.logger?.success('bib file successfully parsed')
-        resolve(data.result)
-      })
-      worker.on('error', reject)
-      worker.on('exit', (code) => {
-        if (code !== 0)
-          reject(new Error(`Worker stopped with exit code ${code}`))
-      })
-    })
-    // const parser = new BibLatexParser(response, {
-    //   processUnexpected: true, 
-    //   processUnknown: true,
-    //   processComments: false,
-    //   processInvalidURIs: false
-    // })
-
-    // try {
-      
-    //   // const parsed = await (async () => {
-    //   //   return parser.parseAsync()
-    //   // })()
-
-      
-    //   return parser.parseAsync().then((bib) => {
-    //     this.logger?.success('bib file successfully parsed')
-    //     return bib
-    //   })
-    // } catch (e) {
-    //   this.logger?.error(`Error parsing Bib: ${(e as Error).message}`)
-    //   process.exit(1)
-    // }
   }
 
 

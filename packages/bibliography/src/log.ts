@@ -46,6 +46,10 @@ export class Logger {
     })
   }
 
+  setLogLevel(logLevel: Logger.Options['logLevel']) {
+    log.setLevel(logLevel, true)
+  }
+
   info(input: Logger.Input) {
     if (log.getLevel() > log.levels.INFO) {
       return
