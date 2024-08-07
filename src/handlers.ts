@@ -1,5 +1,5 @@
-import { DoiAPI } from "@df-astro/bibliography/doiAPI"
-import type { Logger } from "@df-astro/bibliography/log"
+import { DoiAPI } from "@df/bibliography/doiAPI"
+import type { Logger } from "@df/bibliography/log"
 
 export type Output = {
   id: string

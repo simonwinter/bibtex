@@ -1,4 +1,4 @@
-import { BaseCommand, verbosityFlags } from '@df-astro/bibliography/baseCommand'
+import { BaseCommand, verbosityFlags } from '@df/bibliography/baseCommand'
 import {Args, Flags} from '@oclif/core'
 import { BibLatexParser } from 'biblatex-csl-converter'
 

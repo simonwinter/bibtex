@@ -1,5 +1,5 @@
-import type { BibliographyIO } from '@df-astro/bibliography/io'
-import { Logger } from '@df-astro/bibliography/log'
+import type { BibliographyIO } from '@df/bibliography/io'
+import { Logger } from '@df/bibliography/log'
 import { BibLatexParser } from 'biblatex-csl-converter'
 import https from 'https'
 

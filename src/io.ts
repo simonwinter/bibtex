@@ -2,7 +2,7 @@
 import { dirname, resolve } from 'path'
 import { writeFile, mkdir } from 'fs/promises'
 import { statSync } from 'fs'
-// import type { Logger } from '@df-astro/bibliography/log'
+// import type { Logger } from '@df/bibliography/log'
 
 type SaveArgs = {
   input: string

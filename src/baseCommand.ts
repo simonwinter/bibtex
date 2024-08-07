@@ -1,5 +1,5 @@
-import { BibliographyIO } from '@df-astro/bibliography/io'
-import { Logger } from '@df-astro/bibliography/log'
+import { BibliographyIO } from '@df/bibliography/io'
+import { Logger } from '@df/bibliography/log'
 import { Command, Flags, Interfaces } from '@oclif/core'
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<typeof BaseCommand['baseFlags'] & T['flags']>

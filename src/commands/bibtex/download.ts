@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core'
 import https from 'https'
 
-import { BaseCommand } from '@df-astro/bibliography/baseCommand'
+import { BaseCommand } from '@df/bibliography/baseCommand'
 
 const BIB_FILE = 'https://raw.githubusercontent.com/dragonfly-science/bibliography/master/dragonfly.bib'
 
