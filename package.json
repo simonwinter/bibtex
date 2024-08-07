@@ -1,26 +1,76 @@
 {
-  "name": "dragonfly-astro-website",
-  "private": true,
+  "name": "@df-astro/bibliography",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/index.js",
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "bib": "npm run build && npm run start",
+    "clean": "npm run rimraf ./src/content/bibliography/*.json; npm run rimraf ./dist",
+    "bib:download": "./bin/dev.js bibtex download -o ./test.json --no-colour"
+  },
+  "exports": {
+    "./io": {
+      "import": "./dist/io.js"
+    },
+    "./doiAPI": {
+      "import": "./dist/doiAPI.js"
+    },
+    "./handlers": {
+      "import": "./dist/handlers.js"
+    },
+    "./log": {
+      "import": "./dist/log.js"
+    },
+    "./schema": {
+      "import": "./dist/schema.js"
+    },
+    "./utils": {
+      "import": "./dist/utils.js"
+    },
+    "./parseBib": {
+      "import": "./dist/parseBib.js"
+    },
+    "./baseCommand": {
+      "import": "./dist/baseCommand.js"
+    }
+  },
+  "dependencies": {
+    "@orcid/bibtex-parse-js": "0.0.25",
+    "@types/node": "20.14.8",
+    "biblatex-csl-converter": "2.1.0",
+    "typescript": "5.4.5",
+    "zod": "3.23.8"
   },
   "devDependencies": {
-    "prettier": "^3.2.5",
-    "turbo": "^2.0.6",
-    "typescript": "^5.4.5"
+    "@oclif/core": "^4.0.17",
+    "@total-typescript/tsconfig": "1.0.4",
+    "@types/cli-progress": "3.11.6",
+    "ansi-colors": "4.1.3",
+    "chalk": "5.3.0",
+    "cli-progress": "3.12.0",
+    "log-symbols": "6.0.0",
+    "loglevel": "1.9.1",
+    "oclif": "4.14.5",
+    "ora": "8.0.1",
+    "rimraf": "5.0.7",
+    "ts-node": "10.9.2"
   },
-  "engines": {
-    "node": "20.13.0"
+  "bin": {
+    "bibliography": "./bin/run.js",
+    "dragonfly-bibtex": "./bin/run.js"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "dependencies": {
-    "@df-astro/web": "workspace:^"
-  },
-  "packageManager": "npm@10.5.2"
+  "oclif": {
+    "bin": "bibliography",
+    "commands": "./dist/commands",
+    "dirname": "bibliography",
+    "topicSeparator": " ",
+    "nodeOptions": [
+      "--experimental-json-modules"
+    ],
+    "macos": {
+      "identifier": "com.dragonfly.bibliography.cli"
+    }
+  }
 }
