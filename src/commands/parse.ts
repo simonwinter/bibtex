@@ -1,17 +1,12 @@
-import { BaseCommand, verbosityFlags } from '@df/bibliography/baseCommand'
-import {Args, Flags} from '@oclif/core'
+import { BaseCommand } from '../baseCommand.js'
+import { Flags } from '@oclif/core'
 import { BibLatexParser } from 'biblatex-csl-converter'
 
 import { Worker } from 'worker_threads'
-import * as readline from 'readline'
 
 type ParsedBibTex = ReturnType<BibLatexParser['parse']>
 
 export default class Parse extends BaseCommand<typeof Parse> {
-  static override args = {
-    bibtex: Args.string({ description: 'Bibtex string to read and parse' }),
-  }
-
   static override description = 'Parse the input as bibtex'
 
   static override examples = [
@@ -19,74 +14,56 @@ export default class Parse extends BaseCommand<typeof Parse> {
   ]
 
   static override flags = {
-    stdin: Flags.boolean({
-      description: 'read input from stdin',
-      default: true
+    input: Flags.string({
+      char: 'i',
+      description: 'file to read input from',
     }),
-    output: Flags.string({
-      char: 'o',
-      description: 'If saving file to disk, file path to save to',
-      exactlyOne: ['stdout', 'output'],
-      relationships: [
-        {
-          type: 'all',
-          flags: ['json']
-        }
-      ]
-    }),
-    stdout: Flags.boolean({
-      description: 'Indicate if you want output to be redirected to stdout',
-      relationships: [
-        {
-          type: 'all',
-          flags: ['json']
-        }
-      ]
-    })
   }
 
   public static override enableJsonFlag = true
 
   public async run(): Promise<void> {
-    const { args, argv, flags } = await this.parse(Parse)
+    const { flags } = await this.parse(Parse)
 
-    this.logger.setLogLevel(flags.verbosity)
-
-    let rl: readline.Interface | undefined = undefined
-
-    if (flags.stdin || !process.stdin.isTTY) {
-      // Read from stdin
-      rl = readline.createInterface({
-        input: process.stdin,
-        terminal: false,
-      })
-    }
-
-    if (!rl) {
-      return
-    }
-
+    let parsed = ''
+    
     try {
-      let parsed = ''
-
-      for await (const line of rl) {
-        parsed += line
+      if (flags.input) {
+        parsed = await this.io!.readFromDisk(flags.input)
+      } else {
+        parsed = await this.processStdIn()
       }
 
       const output = await this.parseBib(parsed)
       const jsonOut = JSON.stringify(output)
 
-      if (flags.stdout) {
-        return JSON.parse(jsonOut)
-      }
-
       if (flags.output) {
         await this.save(jsonOut, flags.output)
+      } else {
+        process.stdout.write(jsonOut)
       }
     } catch(e) {
       this.logger.error((e as Error).message)
       process.exit(1)
     }
+  }
+
+  private async processStdIn(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      let data = ''
+
+      process.stdin.on('data', (chunk) => {
+        data += chunk
+      })
+
+      process.stdin.on('end', () => {
+        resolve(data)
+      })
+
+      process.stdin.on('error', (error) => {
+        reject(error)
+      })
+    })
   }
 
   private async parseBib(response: string): Promise<ParsedBibTex> {

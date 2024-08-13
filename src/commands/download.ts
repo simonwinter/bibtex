@@ -1,9 +1,7 @@
 import { Flags } from '@oclif/core'
 import https from 'https'
 
-import { BaseCommand } from '@df/bibliography/baseCommand'
-
-const BIB_FILE = 'https://raw.githubusercontent.com/dragonfly-science/bibliography/master/dragonfly.bib'
+import { BaseCommand } from '../baseCommand.js'
 
 export default class Download extends BaseCommand<typeof Download> {
 
@@ -18,10 +16,8 @@ export default class Download extends BaseCommand<typeof Download> {
   static override flags = {
     url: Flags.string({ 
       char: 'u', 
-      required: false,
-      description: 'Url of bibtex file to download.',
-      aliases: ['output'],
-      default: BIB_FILE
+      description: 'Url of bibtex file to download. Defaults to the BIB_FILE_URL env var',
+      env: 'BIB_FILE_URL'
     })
   }
 
@@ -31,26 +27,24 @@ export default class Download extends BaseCommand<typeof Download> {
     const start = performance.now()
     const { flags } = await this.parse(Download)
 
-    this.logger.setLogLevel(flags.verbosity)
-
     const download = await this.download(flags.url)
-
-    if (flags.stdout) {
-      process.stdout.write(download)
-      return
-    }
 
     if (flags.output) {
       await this.save(download, flags.output)
-      return
+    } else {
+      process.stdout.write(download)
     }
 
     const end = performance.now()
     this.logger.info(`Completed in ${(end - start)}ms`)
   }
 
-  private async download(url: string) {
+  private async download(url?: string) {
     try {
+      if (!url) {
+        throw new Error('missing url flag or BIB_FILE_URL env var')
+      }
+
       const progress = this.logger?.progress({
         barCompleteString: 'bib file successfully downloaded'
       })
@@ -72,7 +66,7 @@ export default class Download extends BaseCommand<typeof Download> {
             return
           }
 
-          const totalSize = parseInt(result.headers['content-length'] ?? '0', 10);
+          const totalSize = parseInt(result.headers['content-length'] ?? '0', 10)
           let downloadedSize = 0
           let data = ''
 

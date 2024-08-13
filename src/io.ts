@@ -1,8 +1,8 @@
 // import { get as https } from 'https'
 import { dirname, resolve } from 'path'
-import { writeFile, mkdir } from 'fs/promises'
+import { writeFile, mkdir, readFile } from 'fs/promises'
 import { statSync } from 'fs'
-// import type { Logger } from '@df/bibliography/log'
+// import type { Logger } from './log'
 
 type SaveArgs = {
   input: string
@@ -43,6 +43,11 @@ export class BibliographyIO {
   //     })
   //   })
   // }
+
+  async readFromDisk(path: string) {
+    const absolutePath = resolve(path)
+    return await readFile(absolutePath, 'utf8')
+  }
 
   async saveToDisk({ input, path }: SaveArgs) {
       const absolutePath = resolve(path)

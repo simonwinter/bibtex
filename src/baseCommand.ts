@@ -1,5 +1,5 @@
-import { BibliographyIO } from '@df/bibliography/io'
-import { Logger } from '@df/bibliography/log'
+import { BibliographyIO } from './io.js'
+import { Logger } from './log.js'
 import { Command, Flags, Interfaces } from '@oclif/core'
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<typeof BaseCommand['baseFlags'] & T['flags']>
@@ -19,19 +19,18 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     })({
       char: 'v',
       description: 'set logging level',
-      default: 'silent'
+      default: 'silent',
+      helpGroup: 'GLOBAL'
     }),
     'no-color': Flags.boolean({
       description: 'disable colour output',
-      default: false
+      default: false,
+      helpGroup: 'GLOBAL'
     }),
     output: Flags.string({
       char: 'o',
       description: 'If saving file to disk, file path to save to',
-      exactlyOne: ['stdout', 'output']
-    }),
-    stdout: Flags.boolean({
-      description: 'Indicate if you want output to be redirected to stdout',
+      helpGroup: 'GLOBAL'
     })
   }
 

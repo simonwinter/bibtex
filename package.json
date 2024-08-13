@@ -3,39 +3,21 @@
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
+  "engines": {
+    "node": "20.13.0"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "start": "node ./dist/index.js",
     "bib": "npm run build && npm run start",
-    "clean": "npm run rimraf ./src/content/bibliography/*.json; npm run rimraf ./dist",
+    "clean": "rimraf ./src/content/bibliography/*.json; rimraf ./dist",
     "bib:download": "./bin/dev.js bibtex download -o ./test.json --no-colour"
   },
-  "exports": {
-    "./io": {
-      "import": "./dist/io.js"
-    },
-    "./doiAPI": {
-      "import": "./dist/doiAPI.js"
-    },
-    "./handlers": {
-      "import": "./dist/handlers.js"
-    },
-    "./log": {
-      "import": "./dist/log.js"
-    },
-    "./schema": {
-      "import": "./dist/schema.js"
-    },
-    "./utils": {
-      "import": "./dist/utils.js"
-    },
-    "./parseBib": {
-      "import": "./dist/parseBib.js"
-    },
-    "./baseCommand": {
-      "import": "./dist/baseCommand.js"
-    }
-  },
+  "files": [
+    "/bin",
+    "/dist",
+    "/oclif.manifest.json"
+  ],
   "dependencies": {
     "@orcid/bibtex-parse-js": "0.0.25",
     "@types/node": "20.14.8",
@@ -44,7 +26,7 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
-    "@oclif/core": "^4.0.17",
+    "@oclif/core": "4.0.17",
     "@total-typescript/tsconfig": "1.0.4",
     "@types/cli-progress": "3.11.6",
     "ansi-colors": "4.1.3",
@@ -58,8 +40,7 @@
     "ts-node": "10.9.2"
   },
   "bin": {
-    "bibliography": "./bin/run.js",
-    "dragonfly-bibtex": "./bin/run.js"
+    "bibliography": "./bin/run.js"
   },
   "oclif": {
     "bin": "bibliography",

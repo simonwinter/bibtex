@@ -1,8 +1,8 @@
 import type { OutgoingHttpHeaders } from "http"
 import * as https from 'https'
-import { Utils } from "@df/bibliography/utils"
-import { type Output } from '@df/bibliography/handlers'
-import type { Logger } from "@df/bibliography/log"
+import { Utils } from "./utils.js"
+import { type Output } from './handlers.js'
+import type { Logger } from "./log.js"
 
 export namespace DoiAPI {
   export type RateLimitHeaders = {

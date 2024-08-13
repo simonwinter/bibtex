@@ -1,5 +1,5 @@
-import type { BibliographyIO } from '@df/bibliography/io'
-import { Logger } from '@df/bibliography/log'
+import type { BibliographyIO } from '../io'
+import { Logger } from '../log'
 import { BibLatexParser } from 'biblatex-csl-converter'
 import https from 'https'
 

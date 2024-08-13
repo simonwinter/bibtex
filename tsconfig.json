@@ -1,15 +1,16 @@
 {
-  "extends": "@total-typescript/tsconfig/tsc/no-dom/library-monorepo",
   "compilerOptions": {
-    "paths": {
-      "@df/bibliography/*": ["./src/*"]
-    },
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "module": "ES2022",
-    "resolveJsonModule": true,
-    "moduleResolution": "Bundler",
+    "declaration": true,
+    "module": "Node16",
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "target": "es2022",
+    "moduleResolution": "node16"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/old_commands", "bin"],
+  "include": ["./src/**/*"],
+  "ts-node": {
+    "esm": true
+  }
 }

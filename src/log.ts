@@ -91,7 +91,7 @@ export class Logger {
   }
 
   error(input: Logger.Input) {
-    if (log.getLevel() > log.levels.ERROR) {
+    if (log.getLevel() > log.levels.ERROR && log.getLevel() !== log.levels.SILENT) {
       return
     }
 
