@@ -1,5 +1,5 @@
 {
-  "name": "@df/bibliography",
+  "name": "@simonwinter/bibtex",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,7 +10,7 @@
     "build": "tsc -b",
     "start": "node ./dist/index.js",
     "bib": "npm run build && npm run start",
-    "clean": "rimraf ./src/content/bibliography/*.json; rimraf ./dist",
+    "clean": "rimraf ./src/content/bibliography/*.json; rimraf ./dist; rimraf ./tmp",
     "bib:download": "./bin/dev.js bibtex download -o ./test.json --no-colour"
   },
   "files": [
