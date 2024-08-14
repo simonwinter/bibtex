@@ -1,6 +1,8 @@
+import { resolve } from 'path'
 import { BibliographyIO } from './io.js'
 import { Logger } from './log.js'
 import { Command, Flags, Interfaces } from '@oclif/core'
+import { access } from 'fs/promises'
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<typeof BaseCommand['baseFlags'] & T['flags']>
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>
@@ -8,9 +10,9 @@ export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>
 export const verbosityFlags = ['info', 'warn', 'error', 'silent'] as const
 export type Verbosity = typeof verbosityFlags[number]
 
+const dotenv = await import('dotenv')
+
 export abstract class BaseCommand<T extends typeof Command> extends Command {
-  // add the --json flag
-  static override enableJsonFlag = true
 
   // define flags that can be inherited by any command that extends BaseCommand
   static override baseFlags = {
@@ -31,6 +33,11 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       char: 'o',
       description: 'If saving file to disk, file path to save to',
       helpGroup: 'GLOBAL'
+    }),
+    'env-file': Flags.file({
+      char: 'e',
+      summary: 'Provide a file to read env vars from. By default looks for a local .env file',
+      helpGroup: 'GLOBAL'
     })
   }
 
@@ -50,6 +57,9 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       strict: this.ctor.strict,
     })
 
+    this.flags = flags as Flags<T>
+    this.args = args as Args<T>
+
     this.logger = new Logger({
       logLevel: flags.json ? 'silent' : flags.verbosity,
       prefix: {
@@ -59,19 +69,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
     this.io = new BibliographyIO()
 
-    this.flags = flags as Flags<T>
-    this.args = args as Args<T>
-  }
-
-  protected override async catch(err: Error & {exitCode?: number}): Promise<any> {
-    // add any custom logic to handle errors from the command
-    // or simply return the parent class error handling
-    return super.catch(err)
-  }
-
-  protected override async finally(_: Error | undefined): Promise<any> {
-    // called after run and catch regardless of whether or not the command errored
-    return super.finally(_)
+    await this.detectEnvFile(this.flags)
   }
 
   protected async save(input: string, path: string) {
@@ -84,5 +82,33 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       this.logger?.error((e as Error).message)
       process.exit(1)
     }
+  }
+
+  private async detectEnvFile(flags: Flags<T>) {
+    const file = flags['env-file']
+    const fileName = file ?? '.env'
+    let absolutePath = ''
+    
+    try {
+      absolutePath = resolve(fileName)
+      await access(absolutePath)
+    } catch(e) {
+      if (e instanceof Error && 'code' in e) {
+        switch (e.code) {
+          case 'ENOENT':
+            this.logger.warn(`The environment file (${fileName}) does not exist`)
+            break
+          case 'EACCESS':
+            this.logger.warn(`The environment file (${fileName}) cannot be read`)
+            break
+          default:
+            break
+        }
+      }
+
+      return
+    }
+
+    dotenv.config({ path: absolutePath })
   }
 }

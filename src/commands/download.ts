@@ -14,10 +14,10 @@ export default class Download extends BaseCommand<typeof Download> {
   ]
 
   static override flags = {
-    url: Flags.string({ 
+    url: Flags.url({ 
       char: 'u', 
-      description: 'Url of bibtex file to download. Defaults to the BIB_FILE_URL env var',
-      env: 'BIB_FILE_URL'
+      description: 'Url of bibtex file to download. Defaults to the BIBLIOGRAPHY_FILE_URL env var',
+      env: 'BIBLIOGRAPHY_FILE_URL'
     })
   }
 
@@ -39,10 +39,10 @@ export default class Download extends BaseCommand<typeof Download> {
     this.logger.info(`Completed in ${(end - start)}ms`)
   }
 
-  private async download(url?: string) {
+  private async download(url?: URL) {
     try {
       if (!url) {
-        throw new Error('missing url flag or BIB_FILE_URL env var')
+        throw new Error('missing url flag or BIBLIOGRAPHY_FILE_URL env var')
       }
 
       const progress = this.logger?.progress({

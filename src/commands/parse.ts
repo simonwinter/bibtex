@@ -9,6 +9,8 @@ type ParsedBibTex = ReturnType<BibLatexParser['parse']>
 export default class Parse extends BaseCommand<typeof Parse> {
   static override description = 'Parse the input as bibtex'
 
+  static override summary = 'Accepts input as either a file or from stdin, parses and attempts to output to JSON'
+
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
   ]

@@ -1,7 +1,7 @@
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      BIB_FILE_URL?: string
+      BIBLIOGRAPHY_FILE_URL?: string
     }
   }
 }
