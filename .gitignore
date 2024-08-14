@@ -51,5 +51,6 @@ yarn-error.log*
 # Project
 *.js
 *.js.*
+!bin/*.js
 *.tsbuildinfo
 tmp/
