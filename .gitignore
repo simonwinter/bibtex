@@ -54,3 +54,4 @@ yarn-error.log*
 !bin/*.js
 *.tsbuildinfo
 tmp/
+test-data/

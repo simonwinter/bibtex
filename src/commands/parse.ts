@@ -1,12 +1,12 @@
-import { BaseCommand } from '../baseCommand.js'
-import { Flags } from '@oclif/core'
 import { BibLatexParser } from 'biblatex-csl-converter'
 
 import { Worker } from 'worker_threads'
+import InputCommand from '../base-commands/inputCommand.js'
+import BibliographyIO from '../api/io/index.js'
 
 type ParsedBibTex = ReturnType<BibLatexParser['parse']>
 
-export default class Parse extends BaseCommand<typeof Parse> {
+export default class Parse extends InputCommand<typeof Parse> {
   static override description = 'Parse the input as bibtex'
 
   static override summary = 'Accepts input as either a file or from stdin, parses and attempts to output to JSON'
@@ -14,13 +14,6 @@ export default class Parse extends BaseCommand<typeof Parse> {
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
   ]
-
-  static override flags = {
-    input: Flags.string({
-      char: 'i',
-      description: 'file to read input from',
-    }),
-  }
 
   public static override enableJsonFlag = true
 
@@ -31,7 +24,7 @@ export default class Parse extends BaseCommand<typeof Parse> {
     
     try {
       if (flags.input) {
-        parsed = await this.io!.readFromDisk(flags.input)
+        parsed = await BibliographyIO.readFromDisk(flags.input)
       } else {
         parsed = await this.processStdIn()
       }
@@ -50,29 +43,11 @@ export default class Parse extends BaseCommand<typeof Parse> {
     }
   }
 
-  private async processStdIn(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      let data = ''
-
-      process.stdin.on('data', (chunk) => {
-        data += chunk
-      })
-
-      process.stdin.on('end', () => {
-        resolve(data)
-      })
-
-      process.stdin.on('error', (error) => {
-        reject(error)
-      })
-    })
-  }
-
   private async parseBib(response: string): Promise<ParsedBibTex> {
     this.logger?.processing('parsing bib file')
 
     return new Promise((resolve, reject) => {
-      const worker = new Worker('./dist/parseBib.js', { workerData: response })
+      const worker = new Worker('./dist/api/workers/parseBib.js', { workerData: response })
 
       worker.on('message', (data: { success: boolean; result: ParsedBibTex }) => {
         this.logger?.success('bib file successfully parsed')

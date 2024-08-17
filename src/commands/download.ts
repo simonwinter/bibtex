@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core'
 import https from 'https'
 
-import { BaseCommand } from '../baseCommand.js'
+import { BaseCommand } from '../base-commands/baseCommand.js'
 
 export default class Download extends BaseCommand<typeof Download> {
 

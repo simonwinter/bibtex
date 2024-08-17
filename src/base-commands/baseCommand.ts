@@ -1,6 +1,6 @@
 import { resolve } from 'path'
-import { BibliographyIO } from './io.js'
-import { Logger } from './log.js'
+import BibliographyIO from '../api/io/index.js'
+import { Logger } from '../log.js'
 import { Command, Flags, Interfaces } from '@oclif/core'
 import { access } from 'fs/promises'
 
@@ -45,7 +45,6 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   protected args!: Args<T>
 
   protected logger!: Logger
-  protected io?: BibliographyIO
 
   public override async init(): Promise<void> {
     await super.init()
@@ -67,15 +66,13 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       }
     })
 
-    this.io = new BibliographyIO()
-
     await this.detectEnvFile(this.flags)
   }
 
   protected async save(input: string, path: string) {
     try {
       this.logger?.processing('saving file')
-      const size = await this.io?.saveToDisk({ input, path })
+      const size = await BibliographyIO.saveToDisk({ input, path })
       const fileSize = size ? `\t${(size / 1024 / 1024).toFixed(2)} MB` : ''
       this.logger?.success(`file successfully saved as ${path}${fileSize}`)
     } catch (e) {
@@ -110,5 +107,23 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
 
     dotenv.config({ path: absolutePath })
+  }
+
+  protected async processStdIn(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      let data = ''
+
+      process.stdin.on('data', (chunk) => {
+        data += chunk
+      })
+
+      process.stdin.on('end', () => {
+        resolve(data)
+      })
+
+      process.stdin.on('error', (error) => {
+        reject(error)
+      })
+    })
   }
 }

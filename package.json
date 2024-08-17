@@ -18,6 +18,8 @@
     "/dist"
   ],
   "dependencies": {
+    "@oclif/plugin-autocomplete": "3.2.0",
+    "@oclif/plugin-not-found": "3.2.16",
     "@orcid/bibtex-parse-js": "0.0.25",
     "@types/node": "20.14.8",
     "biblatex-csl-converter": "2.1.0",
@@ -47,7 +49,15 @@
     "description": "Commands to make interacting and extracting data from Bibtex files simpler",
     "commands": "./dist/commands",
     "dirname": "bibliography",
+    "plugins": [
+      "@oclif/plugin-*"
+    ],
     "topicSeparator": " ",
+    "topics": {
+      "doi": {
+        "description": "Commands which take a parsed bibtex file and work on doi references within"
+      }
+    },
     "macos": {
       "identifier": "com.bibliography.cli"
     }
