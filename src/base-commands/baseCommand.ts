@@ -1,5 +1,5 @@
 import { resolve } from 'path'
-import BibliographyIO from '../api/io/index.js'
+import { BibliographyIO } from '../api/index.js'
 import { Logger } from '../log.js'
 import { Command, Flags, Interfaces } from '@oclif/core'
 import { access } from 'fs/promises'

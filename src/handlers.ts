@@ -1,4 +1,4 @@
-import { DoiAPI } from "./doiAPI.js"
+import { CrossRefDoiAPI } from "./api/doi/crossref/index.js"
 import type { Logger } from "./log.js"
 
 export type Output = {
@@ -14,10 +14,10 @@ type Context = {
   limit: number
   interval: number
   count: number
-  doiAPI: DoiAPI
+  doiAPI: CrossRefDoiAPI
 } & Pick<Output, 'fields'>
 
-type Marks = NonNullable<Pick<DoiAPI.TitleRecord, 'marks'>['marks']>
+type Marks = NonNullable<Pick<CrossRefDoiAPI.TitleRecord, 'marks'>['marks']>
 
 interface JsonHandler {
   handle(context: Context, result: Readonly<Output>, mutated?: Output): Promise<Output> | Output
@@ -28,7 +28,7 @@ export class TitleHandler implements JsonHandler {
     const copiedOutput = mutated ?? { ...result }
 
     if ('title' in context) {
-      copiedOutput.title = (context.title as DoiAPI.TitleRecord[]).map(({ text, marks }) => this.processMarks(text, marks)).join()
+      copiedOutput.title = (context.title as CrossRefDoiAPI.TitleRecord[]).map(({ text, marks }) => this.processMarks(text, marks)).join()
     }
     
     return copiedOutput
@@ -79,14 +79,29 @@ export class DOIHandler implements JsonHandler {
     if ('doi' in context.fields) {
       const doi = (context.fields['doi'] as string).replace(/https?\:\/\/(\w+\.)?doi\.org\//, '')
 
-      return context.doiAPI.fetchMetadataFromDOI(doi).then((metaData) => {
-        const response: Record<string, unknown> = JSON.parse(metaData)
-        copiedOutput['meta'] = response
-        return copiedOutput
-      }).catch((err) => {
-        self.logger.error(`DOI error (${context.fields['doi']}): ${err.message}`)
-        return copiedOutput
-      })
+      try {
+        const result = await context.doiAPI.fetchData(doi)
+        
+        // .then((metaData) => {
+          const response: Record<string, unknown> = JSON.parse(result)
+          copiedOutput['meta'] = response
+          return copiedOutput
+        // }).catch((err) => {
+        //   self.logger.error(`DOI error (${context.fields['doi']}): ${err.message}`)
+        //   return copiedOutput
+        // })
+      } catch (e) {
+        this.logger.error(`(${doi}) ` + (e as Error).message)
+      }
+
+      // return context.doiAPI.fetchData(doi).then((metaData) => {
+      //   const response: Record<string, unknown> = JSON.parse(metaData)
+      //   copiedOutput['meta'] = response
+      //   return copiedOutput
+      // }).catch((err) => {
+      //   self.logger.error(`DOI error (${context.fields['doi']}): ${err.message}`)
+      //   return copiedOutput
+      // })
     }
 
     return copiedOutput

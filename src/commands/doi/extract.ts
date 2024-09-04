@@ -1,7 +1,9 @@
 import bibTex, { type BibTexParser as Parser } from '../../schema/BibTexParser.js'
 import InputCommand from '../../base-commands/inputCommand.js'
 import { BibLatexParser } from 'biblatex-csl-converter'
-import BibliographyIO from '../../api/io/index.js'
+import { BibliographyIO } from '../../api/index.js'
+import { CrossRefDoiAPI } from '../../api/doi/crossref/index.js'
+import { DOIHandler, TitleHandler } from '../../handlers.js'
 
 
 export default class DoiExtract extends InputCommand<typeof DoiExtract> {
@@ -16,12 +18,56 @@ export default class DoiExtract extends InputCommand<typeof DoiExtract> {
     const { flags } = await this.parse(DoiExtract)
 
     if (flags.input) {
-      let output: BibLatexParser['entries'] = await this.readInput(flags.input)
+      const output: BibLatexParser['entries'] = await this.readInput(flags.input)
+      const doiEntries = output.filter((i) => i.fields['doi'])
+
+      // console.log('entries', )
+
+      const DOI_API_HEADERS = {
+        'User-Agent': 'DragonflyBot/1.0 (https://www.dragonfly.co.nz; mailto:simon@dragonfly.co.nz)'
+      }
+
+      const doiAPI = new CrossRefDoiAPI(this.logger, DOI_API_HEADERS)
+      const { interval, limit } = await doiAPI.getRateLimit()
+      console.log('limit', interval, limit)
+
+      this.logger.info(`entries: ${doiEntries.length}`)
+
+      const promises = doiEntries.map((entry) => {
+        const { entry_key, bib_type, fields: entry_fields } = entry
+        const fields: Record<string, unknown> = JSON.parse(JSON.stringify(entry_fields))
+
+        let initial = {
+          id: entry_key,
+          bib_type: bib_type,
+          fields
+        }
+
+        return async () => {
+          const titleHander = new TitleHandler()
+          const doiHandler = new DOIHandler(this.logger)
+
+          let result = titleHander.handle(fields, initial)
+
+          console.log(`${result.title} (${result.fields.doi})`)
+
+          return await doiHandler.handle({
+            fields,
+            doiAPI
+          }, result)
+        }
+      })
+
+      // !NOTE - we are ignoring the returned limit, as it comes back as 50, but
+      // !NOTE - appears to actually be 5
+      const results = await doiAPI.throttlePromises(promises, interval, 5)
+
+      console.log('results', results)
 
       if (flags.output) {
         // Do something
       } else {
-        BibliographyIO.streamArrayToStdOutAsJson(output, 'entries')
+        // BibliographyIO.streamArrayToStdOutAsJson(output, 'entries')
       }
     }
   }

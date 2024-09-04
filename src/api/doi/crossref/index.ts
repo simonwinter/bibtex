@@ -1,15 +1,11 @@
 import type { OutgoingHttpHeaders } from "http"
 import * as https from 'https'
-import { Utils } from "./utils.js"
-import { type Output } from './handlers.js'
-import type { Logger } from "./log.js"
+import { Utils } from "../../../utils.js"
+import { type Output } from '../../../handlers.js'
+import type { Logger } from "../../../log.js"
+import { rateLimit } from "./schema.js"
 
-export namespace DoiAPI {
-  export type RateLimitHeaders = {
-    'x-rate-limit-limit': string,
-    'x-rate-limit-interval': string
-  }
-
+export namespace CrossRefDoiAPI {
   export type TitleRecord = {
     type: string
     text: string
@@ -30,7 +26,7 @@ export namespace DoiAPI {
   export type PromiseList<T = Output> = (() => Promise<T>)[]
 }
 
-export class DoiAPI {
+export class CrossRefDoiAPI {
   headers: OutgoingHttpHeaders | undefined
   logger: Logger
 
@@ -39,11 +35,13 @@ export class DoiAPI {
     this.logger = logger
   }
 
-  async fetchMetadataFromDOI(doi: string): Promise<string> {
+  async fetchData(doi: string): Promise<string> {
     const self = this
+
     return new Promise((resolve, reject) => {
       self.logger.info(`fetching ${doi}`)
       const start = new Date().getTime()
+
       https.get(`https://api.crossref.org/works/${doi}`, { headers: self.headers }, (result) => {
         let data = ''
 
@@ -98,10 +96,10 @@ export class DoiAPI {
   }
 
   async getRateLimit() {
-    const rateLimit = JSON.parse(await this.retrieveRateLimit()) as DoiAPI.RateLimitHeaders
+    const apiRateLimit = rateLimit.parse(JSON.parse(await this.retrieveRateLimit()))
     let apiCount = 0
-    const interval = Utils.convertToMs(rateLimit['x-rate-limit-interval'])
-    const limit = +rateLimit['x-rate-limit-limit']
+    const interval = Utils.convertToMs(apiRateLimit['x-rate-limit-interval'])
+    const limit = +apiRateLimit['x-rate-limit-limit']
 
     // console.log(rateLimit, limit, interval)
 
@@ -111,14 +109,14 @@ export class DoiAPI {
     }
   }
 
-  async throttlePromises<T = Output>(promises: DoiAPI.PromiseList<T>, interval: number, limit: number) {
+  async throttlePromises<T = Output>(promises: CrossRefDoiAPI.PromiseList<T>, interval: number, limit: number) {
     let results: T[] = []
 
     for (let i = 0; i < promises.length; i += limit) {
       const batch = promises.slice(i, i + limit)
 
       // settle
-      const out = await Promise.all(batch.map((p) => p()))
+      const out = await Promise.all(batch.map(async (p) => await p()))
       
       // throttle
       if (i + limit < promises.length) {

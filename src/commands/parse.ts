@@ -2,7 +2,7 @@ import { BibLatexParser } from 'biblatex-csl-converter'
 
 import { Worker } from 'worker_threads'
 import InputCommand from '../base-commands/inputCommand.js'
-import BibliographyIO from '../api/io/index.js'
+import {BibliographyIO} from '../api/index.js'
 
 type ParsedBibTex = ReturnType<BibLatexParser['parse']>
 
